@@ -15,6 +15,7 @@ class WalletAPIError(Exception):
         self.response = response
         super().__init__()
 
+
 class AsyncClient:
 
     def __init__(self, url=None, verbose=False):
@@ -60,7 +61,7 @@ class AsyncClient:
             print()
 
         # Check for errors and unwrap result.
-        if not 'result' in response_data:
+        if 'result' not in response_data:
             raise WalletAPIError(response_data)
 
         self._query_count += 1
