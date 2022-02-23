@@ -1,16 +1,16 @@
 table! {
     accounts (id) {
-        id -> Integer,
-        account_id_hex -> Text,
-        account_key -> Binary,
-        entropy -> Binary,
-        key_derivation_version -> Integer,
-        main_subaddress_index -> BigInt,
-        change_subaddress_index -> BigInt,
-        next_subaddress_index -> BigInt,
-        first_block_index -> BigInt,
-        next_block_index -> BigInt,
-        import_block_index -> Nullable<BigInt>,
+        id -> Int4,
+        account_id_hex -> Bpchar,
+        account_key -> Bytea,
+        entropy -> Bytea,
+        key_derivation_version -> Int4,
+        main_subaddress_index -> Int8,
+        change_subaddress_index -> Int8,
+        next_subaddress_index -> Int8,
+        first_block_index -> Int8,
+        next_block_index -> Int8,
+        import_block_index -> Nullable<Int8>,
         name -> Text,
         fog_enabled -> Bool,
     }
@@ -18,40 +18,40 @@ table! {
 
 table! {
     assigned_subaddresses (id) {
-        id -> Integer,
+        id -> Int4,
         assigned_subaddress_b58 -> Text,
-        account_id_hex -> Text,
-        address_book_entry -> Nullable<BigInt>,
-        public_address -> Binary,
-        subaddress_index -> BigInt,
+        account_id_hex -> Bpchar,
+        address_book_entry -> Nullable<Int8>,
+        public_address -> Bytea,
+        subaddress_index -> Int8,
         comment -> Text,
-        subaddress_spend_key -> Binary,
+        subaddress_spend_key -> Bytea,
     }
 }
 
 table! {
     gift_codes (id) {
-        id -> Integer,
+        id -> Int4,
         gift_code_b58 -> Text,
-        value -> BigInt,
+        value -> Int8,
     }
 }
 
 table! {
     transaction_logs (id) {
-        id -> Integer,
+        id -> Int4,
         transaction_id_hex -> Text,
-        account_id_hex -> Text,
+        account_id_hex -> Bpchar,
         assigned_subaddress_b58 -> Nullable<Text>,
-        value -> BigInt,
-        fee -> Nullable<BigInt>,
+        value -> Int8,
+        fee -> Nullable<Int8>,
         status -> Text,
-        sent_time -> Nullable<BigInt>,
-        submitted_block_index -> Nullable<BigInt>,
-        finalized_block_index -> Nullable<BigInt>,
+        sent_time -> Nullable<Int8>,
+        submitted_block_index -> Nullable<Int8>,
+        finalized_block_index -> Nullable<Int8>,
         comment -> Text,
         direction -> Text,
-        tx -> Nullable<Binary>,
+        tx -> Nullable<Bytea>,
     }
 }
 
@@ -65,19 +65,19 @@ table! {
 
 table! {
     txos (id) {
-        id -> Integer,
+        id -> Int4,
         txo_id_hex -> Text,
-        value -> BigInt,
-        target_key -> Binary,
-        public_key -> Binary,
-        e_fog_hint -> Binary,
-        txo -> Binary,
-        subaddress_index -> Nullable<BigInt>,
-        key_image -> Nullable<Binary>,
-        received_block_index -> Nullable<BigInt>,
-        pending_tombstone_block_index -> Nullable<BigInt>,
-        spent_block_index -> Nullable<BigInt>,
-        confirmation -> Nullable<Binary>,
+        value -> Int8,
+        target_key -> Bytea,
+        public_key -> Bytea,
+        e_fog_hint -> Bytea,
+        txo -> Bytea,
+        subaddress_index -> Nullable<Int8>,
+        key_image -> Nullable<Bytea>,
+        received_block_index -> Nullable<Int8>,
+        pending_tombstone_block_index -> Nullable<Int8>,
+        spent_block_index -> Nullable<Int8>,
+        confirmation -> Nullable<Bytea>,
         recipient_public_address_b58 -> Text,
         minted_account_id_hex -> Nullable<Text>,
         received_account_id_hex -> Nullable<Text>,

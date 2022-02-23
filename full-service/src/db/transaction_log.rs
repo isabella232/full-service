@@ -61,18 +61,18 @@ pub trait TransactionLogModel {
     /// Get a transaction log from the TransactionId.
     fn get(
         transaction_id_hex: &str,
-        conn: &PooledConnection<ConnectionManager<SqliteConnection>>,
+        conn: &PooledConnection<ConnectionManager<PgConnection>>,
     ) -> Result<TransactionLog, WalletDbError>;
 
     /// Get all transaction logs for the given block index.
     fn get_all_for_block_index(
         block_index: u64,
-        conn: &PooledConnection<ConnectionManager<SqliteConnection>>,
+        conn: &PooledConnection<ConnectionManager<PgConnection>>,
     ) -> Result<Vec<TransactionLog>, WalletDbError>;
 
     /// Get all transaction logs ordered by finalized_block_index.
     fn get_all_ordered_by_block_index(
-        conn: &PooledConnection<ConnectionManager<SqliteConnection>>,
+        conn: &PooledConnection<ConnectionManager<PgConnection>>,
     ) -> Result<Vec<TransactionLog>, WalletDbError>;
 
     /// Get the Txos associated with a given TransactionId, grouped according to
@@ -82,13 +82,13 @@ pub trait TransactionLogModel {
     /// * AssoiatedTxos(inputs, outputs, change)
     fn get_associated_txos(
         &self,
-        conn: &PooledConnection<ConnectionManager<SqliteConnection>>,
+        conn: &PooledConnection<ConnectionManager<PgConnection>>,
     ) -> Result<AssociatedTxos, WalletDbError>;
 
     /// Select the TransactionLogs associated with a given TxoId.
     fn select_for_txo(
         txo_id_hex: &str,
-        conn: &PooledConnection<ConnectionManager<SqliteConnection>>,
+        conn: &PooledConnection<ConnectionManager<PgConnection>>,
     ) -> Result<Vec<TransactionLog>, WalletDbError>;
 
     /// List all TransactionLogs and their associated Txos for a given account.
@@ -99,7 +99,7 @@ pub trait TransactionLogModel {
         account_id_hex: &str,
         offset: Option<i64>,
         limit: Option<i64>,
-        conn: &PooledConnection<ConnectionManager<SqliteConnection>>,
+        conn: &PooledConnection<ConnectionManager<PgConnection>>,
     ) -> Result<Vec<(TransactionLog, AssociatedTxos)>, WalletDbError>;
 
     /// Log a received transaction.
@@ -109,7 +109,7 @@ pub trait TransactionLogModel {
         txo_id_hex: &str,
         amount: i64,
         block_index: u64,
-        conn: &PooledConnection<ConnectionManager<SqliteConnection>>,
+        conn: &PooledConnection<ConnectionManager<PgConnection>>,
     ) -> Result<(), WalletDbError>;
 
     /// Log a submitted transaction.
@@ -127,31 +127,31 @@ pub trait TransactionLogModel {
         block_index: u64,
         comment: String,
         account_id_hex: &str,
-        conn: &PooledConnection<ConnectionManager<SqliteConnection>>,
+        conn: &PooledConnection<ConnectionManager<PgConnection>>,
     ) -> Result<TransactionLog, WalletDbError>;
 
     /// Remove all logs for an account
     fn delete_all_for_account(
         account_id_hex: &str,
-        conn: &PooledConnection<ConnectionManager<SqliteConnection>>,
+        conn: &PooledConnection<ConnectionManager<PgConnection>>,
     ) -> Result<(), WalletDbError>;
 
     fn update_tx_logs_associated_with_txo_to_succeeded(
         txo_id_hex: &str,
         finalized_block_index: i64,
-        conn: &PooledConnection<ConnectionManager<SqliteConnection>>,
+        conn: &PooledConnection<ConnectionManager<PgConnection>>,
     ) -> Result<(), WalletDbError>;
 
     fn update_tx_logs_associated_with_txos_to_failed(
         txos: &[Txo],
-        conn: &PooledConnection<ConnectionManager<SqliteConnection>>,
+        conn: &PooledConnection<ConnectionManager<PgConnection>>,
     ) -> Result<(), WalletDbError>;
 }
 
 impl TransactionLogModel for TransactionLog {
     fn get(
         transaction_id_hex: &str,
-        conn: &PooledConnection<ConnectionManager<SqliteConnection>>,
+        conn: &PooledConnection<ConnectionManager<PgConnection>>,
     ) -> Result<TransactionLog, WalletDbError> {
         use crate::db::schema::transaction_logs::dsl::{
             transaction_id_hex as dsl_transaction_id_hex, transaction_logs,
@@ -172,7 +172,7 @@ impl TransactionLogModel for TransactionLog {
 
     fn get_all_for_block_index(
         block_index: u64,
-        conn: &PooledConnection<ConnectionManager<SqliteConnection>>,
+        conn: &PooledConnection<ConnectionManager<PgConnection>>,
     ) -> Result<Vec<TransactionLog>, WalletDbError> {
         use crate::db::schema::transaction_logs::{
             all_columns, dsl::transaction_logs, finalized_block_index,
@@ -187,7 +187,7 @@ impl TransactionLogModel for TransactionLog {
     }
 
     fn get_all_ordered_by_block_index(
-        conn: &PooledConnection<ConnectionManager<SqliteConnection>>,
+        conn: &PooledConnection<ConnectionManager<PgConnection>>,
     ) -> Result<Vec<TransactionLog>, WalletDbError> {
         use crate::db::schema::transaction_logs::{
             all_columns, dsl::transaction_logs, finalized_block_index,
@@ -203,7 +203,7 @@ impl TransactionLogModel for TransactionLog {
 
     fn get_associated_txos(
         &self,
-        conn: &PooledConnection<ConnectionManager<SqliteConnection>>,
+        conn: &PooledConnection<ConnectionManager<PgConnection>>,
     ) -> Result<AssociatedTxos, WalletDbError> {
         use crate::db::schema::{transaction_txo_types, txos};
 
@@ -241,7 +241,7 @@ impl TransactionLogModel for TransactionLog {
 
     fn select_for_txo(
         txo_id_hex: &str,
-        conn: &PooledConnection<ConnectionManager<SqliteConnection>>,
+        conn: &PooledConnection<ConnectionManager<PgConnection>>,
     ) -> Result<Vec<TransactionLog>, WalletDbError> {
         use crate::db::schema::{transaction_logs, transaction_txo_types};
 
@@ -258,7 +258,7 @@ impl TransactionLogModel for TransactionLog {
         account_id_hex: &str,
         offset: Option<i64>,
         limit: Option<i64>,
-        conn: &PooledConnection<ConnectionManager<SqliteConnection>>,
+        conn: &PooledConnection<ConnectionManager<PgConnection>>,
     ) -> Result<Vec<(TransactionLog, AssociatedTxos)>, WalletDbError> {
         use crate::db::schema::{transaction_logs, transaction_txo_types, txos};
 
@@ -350,7 +350,7 @@ impl TransactionLogModel for TransactionLog {
         txo_id_hex: &str,
         amount: i64,
         block_index: u64,
-        conn: &PooledConnection<ConnectionManager<SqliteConnection>>,
+        conn: &PooledConnection<ConnectionManager<PgConnection>>,
     ) -> Result<(), WalletDbError> {
         use crate::db::schema::transaction_txo_types;
 
@@ -392,7 +392,7 @@ impl TransactionLogModel for TransactionLog {
         block_index: u64,
         comment: String,
         account_id_hex: &str,
-        conn: &PooledConnection<ConnectionManager<SqliteConnection>>,
+        conn: &PooledConnection<ConnectionManager<PgConnection>>,
     ) -> Result<TransactionLog, WalletDbError> {
         // Verify that the account exists.
         Account::get(&AccountID(account_id_hex.to_string()), conn)?;
@@ -474,7 +474,7 @@ impl TransactionLogModel for TransactionLog {
 
     fn delete_all_for_account(
         account_id_hex: &str,
-        conn: &PooledConnection<ConnectionManager<SqliteConnection>>,
+        conn: &PooledConnection<ConnectionManager<PgConnection>>,
     ) -> Result<(), WalletDbError> {
         use crate::db::schema::{
             transaction_logs as cols, transaction_logs::dsl::transaction_logs,
@@ -502,7 +502,7 @@ impl TransactionLogModel for TransactionLog {
     fn update_tx_logs_associated_with_txo_to_succeeded(
         txo_id_hex: &str,
         finalized_block_index: i64,
-        conn: &PooledConnection<ConnectionManager<SqliteConnection>>,
+        conn: &PooledConnection<ConnectionManager<PgConnection>>,
     ) -> Result<(), WalletDbError> {
         use crate::db::schema::{transaction_logs, transaction_txo_types};
 
@@ -533,7 +533,7 @@ impl TransactionLogModel for TransactionLog {
 
     fn update_tx_logs_associated_with_txos_to_failed(
         txos: &[Txo],
-        conn: &PooledConnection<ConnectionManager<SqliteConnection>>,
+        conn: &PooledConnection<ConnectionManager<PgConnection>>,
     ) -> Result<(), WalletDbError> {
         use crate::db::schema::{transaction_logs, transaction_txo_types};
 

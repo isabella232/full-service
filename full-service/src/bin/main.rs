@@ -3,7 +3,7 @@
 //! MobileCoin wallet service
 
 #![feature(proc_macro_hygiene, decl_macro)]
-use diesel::{connection::SimpleConnection, prelude::*, SqliteConnection};
+use diesel::{pg::PgConnection, prelude::*, Connection};
 use diesel_migrations::embed_migrations;
 use dotenv::dotenv;
 use mc_attest_verifier::{MrSignerVerifier, Verifier, DEBUG_ENCLAVE};
@@ -64,17 +64,10 @@ fn main() {
             .unwrap();
 
     // Connect to the database and run the migrations
-    let conn =
-        SqliteConnection::establish(config.wallet_db.to_str().unwrap()).unwrap_or_else(|err| {
-            eprintln!("Cannot open database {:?}: {:?}", config.wallet_db, err);
-            exit(EXIT_NO_DATABASE_CONNECTION);
-        });
-    WalletDb::set_db_encryption_key_from_env(&conn);
-    WalletDb::try_change_db_encryption_key_from_env(&conn);
-    if !WalletDb::check_database_connectivity(&conn) {
-        eprintln!("Incorrect password for database {:?}.", config.wallet_db);
-        exit(EXIT_WRONG_PASSWORD);
-    };
+    let conn = PgConnection::establish(config.wallet_db.to_str().unwrap()).unwrap_or_else(|err| {
+        eprintln!("Cannot open database {:?}: {:?}", config.wallet_db, err);
+        exit(EXIT_NO_DATABASE_CONNECTION);
+    });
 
     // Our migrations sometimes violate foreign keys, so disable foreign key checks
     // while we apply them.
@@ -85,13 +78,13 @@ fn main() {
     // BEGIN or SAVEPOINT."
     // Check foreign key constraints after the migration. If they fail,
     // we will abort until the user resolves it.
-    conn.batch_execute("PRAGMA foreign_keys = OFF;")
-        .expect("failed disabling foreign keys");
+    // conn.batch_execute("PRAGMA foreign_keys = OFF;")
+    //     .expect("failed disabling foreign keys");
     embedded_migrations::run_with_output(&conn, &mut std::io::stdout())
         .expect("failed running migrations");
-    WalletDb::validate_foreign_keys(&conn);
-    conn.batch_execute("PRAGMA foreign_keys = ON;")
-        .expect("failed enabling foreign keys");
+    // WalletDb::validate_foreign_keys(&conn);
+    // conn.batch_execute("PRAGMA foreign_keys = ON;")
+    //     .expect("failed enabling foreign keys");
 
     log::info!(logger, "Connected to database.");
 

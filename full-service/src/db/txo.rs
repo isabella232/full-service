@@ -82,7 +82,7 @@ pub trait TxoModel {
         value: u64,
         received_block_index: i64,
         account_id_hex: &str,
-        conn: &PooledConnection<ConnectionManager<SqliteConnection>>,
+        conn: &PooledConnection<ConnectionManager<PgConnection>>,
     ) -> Result<String, WalletDbError>;
 
     /// Processes a TxProposal to create a new minted Txo and a change Txo.
@@ -94,7 +94,7 @@ pub trait TxoModel {
         txo: &TxOut,
         tx_proposal: &TxProposal,
         outlay_index: usize,
-        conn: &PooledConnection<ConnectionManager<SqliteConnection>>,
+        conn: &PooledConnection<ConnectionManager<PgConnection>>,
     ) -> Result<ProcessedTxProposalOutput, WalletDbError>;
 
     /// Update an existing Txo to spendable by including its subaddress_index
@@ -105,35 +105,35 @@ pub trait TxoModel {
         received_subaddress_index: Option<i64>,
         received_key_image: Option<KeyImage>,
         block_index: i64,
-        conn: &PooledConnection<ConnectionManager<SqliteConnection>>,
+        conn: &PooledConnection<ConnectionManager<PgConnection>>,
     ) -> Result<(), WalletDbError>;
 
     /// Update a Txo's received block count.
     fn update_received_block_index(
         &self,
         block_index: i64,
-        conn: &PooledConnection<ConnectionManager<SqliteConnection>>,
+        conn: &PooledConnection<ConnectionManager<PgConnection>>,
     ) -> Result<(), WalletDbError>;
 
     /// Update a Txo's status to pending
     fn update_to_pending(
         &self,
         pending_tombstone_block_index: i64,
-        conn: &PooledConnection<ConnectionManager<SqliteConnection>>,
+        conn: &PooledConnection<ConnectionManager<PgConnection>>,
     ) -> Result<(), WalletDbError>;
 
     /// Update a Txo's status to spent
     fn update_to_spent(
         txo_id_hex: &str,
         spent_block_index: i64,
-        conn: &PooledConnection<ConnectionManager<SqliteConnection>>,
+        conn: &PooledConnection<ConnectionManager<PgConnection>>,
     ) -> Result<(), WalletDbError>;
 
     /// Update all Txo's that are pending with a pending_tombstone_block_index
     /// less than the target block index to unspent
     fn update_txos_exceeding_pending_tombstone_block_index_to_unspent(
         block_index: i64,
-        conn: &PooledConnection<ConnectionManager<SqliteConnection>>,
+        conn: &PooledConnection<ConnectionManager<PgConnection>>,
     ) -> Result<(), WalletDbError>;
 
     /// Get all Txos associated with a given account.
@@ -141,57 +141,57 @@ pub trait TxoModel {
         account_id_hex: &str,
         offset: Option<i64>,
         limit: Option<i64>,
-        conn: &PooledConnection<ConnectionManager<SqliteConnection>>,
+        conn: &PooledConnection<ConnectionManager<PgConnection>>,
     ) -> Result<Vec<Txo>, WalletDbError>;
 
     fn list_for_address(
         assigned_subaddress_b58: &str,
-        conn: &PooledConnection<ConnectionManager<SqliteConnection>>,
+        conn: &PooledConnection<ConnectionManager<PgConnection>>,
     ) -> Result<Vec<Txo>, WalletDbError>;
 
     fn list_unspent(
         account_id_hex: &str,
         assigned_subaddress_b58: Option<&str>,
-        conn: &PooledConnection<ConnectionManager<SqliteConnection>>,
+        conn: &PooledConnection<ConnectionManager<PgConnection>>,
     ) -> Result<Vec<Txo>, WalletDbError>;
 
     /// Get a map from key images to unspent txos for this account.
     fn list_unspent_or_pending_key_images(
         account_id_hex: &str,
-        conn: &PooledConnection<ConnectionManager<SqliteConnection>>,
+        conn: &PooledConnection<ConnectionManager<PgConnection>>,
     ) -> Result<HashMap<KeyImage, String>, WalletDbError>;
 
     fn list_spent(
         account_id_hex: &str,
         assigned_subaddress_b58: Option<&str>,
-        conn: &PooledConnection<ConnectionManager<SqliteConnection>>,
+        conn: &PooledConnection<ConnectionManager<PgConnection>>,
     ) -> Result<Vec<Txo>, WalletDbError>;
 
     fn list_secreted(
         account_id_hex: &str,
-        conn: &PooledConnection<ConnectionManager<SqliteConnection>>,
+        conn: &PooledConnection<ConnectionManager<PgConnection>>,
     ) -> Result<Vec<Txo>, WalletDbError>;
 
     fn list_orphaned(
         account_id_hex: &str,
-        conn: &PooledConnection<ConnectionManager<SqliteConnection>>,
+        conn: &PooledConnection<ConnectionManager<PgConnection>>,
     ) -> Result<Vec<Txo>, WalletDbError>;
 
     fn list_pending(
         account_id_hex: &str,
         assigned_subaddress_b58: Option<&str>,
-        conn: &PooledConnection<ConnectionManager<SqliteConnection>>,
+        conn: &PooledConnection<ConnectionManager<PgConnection>>,
     ) -> Result<Vec<Txo>, WalletDbError>;
 
     fn list_minted(
         account_id_hex: &str,
-        conn: &PooledConnection<ConnectionManager<SqliteConnection>>,
+        conn: &PooledConnection<ConnectionManager<PgConnection>>,
     ) -> Result<Vec<Txo>, WalletDbError>;
 
     fn list_pending_exceeding_block_index(
         account_id_hex: &str,
         block_index: i64,
-        conn: &PooledConnection<ConnectionManager<SqliteConnection>>,
+        conn: &PooledConnection<ConnectionManager<PgConnection>>,
     ) -> Result<Vec<Txo>, WalletDbError>;
 
     /// Get the details for a specific Txo.
@@ -200,7 +200,7 @@ pub trait TxoModel {
     /// * Txo
     fn get(
         txo_id_hex: &str,
-        conn: &PooledConnection<ConnectionManager<SqliteConnection>>,
+        conn: &PooledConnection<ConnectionManager<PgConnection>>,
     ) -> Result<Txo, WalletDbError>;
 
     /// Get several Txos by Txo public_keys
@@ -209,7 +209,7 @@ pub trait TxoModel {
     /// * Vec<Txo>
     fn select_by_public_key(
         public_keys: &[&CompressedRistrettoPublic],
-        conn: &PooledConnection<ConnectionManager<SqliteConnection>>,
+        conn: &PooledConnection<ConnectionManager<PgConnection>>,
     ) -> Result<Vec<Txo>, WalletDbError>;
 
     /// Select several Txos by their TxoIds
@@ -218,7 +218,7 @@ pub trait TxoModel {
     /// * Vec<(Txo, TxoStatus)>
     fn select_by_id(
         txo_ids: &[String],
-        conn: &PooledConnection<ConnectionManager<SqliteConnection>>,
+        conn: &PooledConnection<ConnectionManager<PgConnection>>,
     ) -> Result<Vec<Txo>, WalletDbError>;
 
     /// Select a set of unspent Txos to reach a given value.
@@ -229,7 +229,7 @@ pub trait TxoModel {
         account_id_hex: &str,
         target_value: u64,
         max_spendable_value: Option<i64>,
-        conn: &PooledConnection<ConnectionManager<SqliteConnection>>,
+        conn: &PooledConnection<ConnectionManager<PgConnection>>,
     ) -> Result<Vec<Txo>, WalletDbError>;
 
     /// Validate a confirmation number for a Txo
@@ -240,17 +240,17 @@ pub trait TxoModel {
         account_id: &AccountID,
         txo_id_hex: &str,
         confirmation: &TxOutConfirmationNumber,
-        conn: &PooledConnection<ConnectionManager<SqliteConnection>>,
+        conn: &PooledConnection<ConnectionManager<PgConnection>>,
     ) -> Result<bool, WalletDbError>;
 
     fn scrub_account(
         account_id_hex: &str,
-        conn: &PooledConnection<ConnectionManager<SqliteConnection>>,
+        conn: &PooledConnection<ConnectionManager<PgConnection>>,
     ) -> Result<(), WalletDbError>;
 
     /// Delete txos which are not referenced by any account or transaction.
     fn delete_unreferenced(
-        conn: &PooledConnection<ConnectionManager<SqliteConnection>>,
+        conn: &PooledConnection<ConnectionManager<PgConnection>>,
     ) -> Result<(), WalletDbError>;
 
     fn is_change(&self) -> bool;
@@ -276,7 +276,7 @@ impl TxoModel for Txo {
         value: u64,
         received_block_index: i64,
         account_id_hex: &str,
-        conn: &PooledConnection<ConnectionManager<SqliteConnection>>,
+        conn: &PooledConnection<ConnectionManager<PgConnection>>,
     ) -> Result<String, WalletDbError> {
         // Verify that the account exists.
         Account::get(&AccountID(account_id_hex.to_string()), conn)?;
@@ -332,7 +332,7 @@ impl TxoModel for Txo {
         output: &TxOut,
         tx_proposal: &TxProposal,
         output_index: usize,
-        conn: &PooledConnection<ConnectionManager<SqliteConnection>>,
+        conn: &PooledConnection<ConnectionManager<PgConnection>>,
     ) -> Result<ProcessedTxProposalOutput, WalletDbError> {
         use crate::db::schema::txos;
 
@@ -418,7 +418,7 @@ impl TxoModel for Txo {
         received_subaddress_index: Option<i64>,
         received_key_image: Option<KeyImage>,
         block_index: i64,
-        conn: &PooledConnection<ConnectionManager<SqliteConnection>>,
+        conn: &PooledConnection<ConnectionManager<PgConnection>>,
     ) -> Result<(), WalletDbError> {
         use crate::db::schema::txos;
 
@@ -439,7 +439,7 @@ impl TxoModel for Txo {
     fn update_received_block_index(
         &self,
         block_index: i64,
-        conn: &PooledConnection<ConnectionManager<SqliteConnection>>,
+        conn: &PooledConnection<ConnectionManager<PgConnection>>,
     ) -> Result<(), WalletDbError> {
         use crate::db::schema::txos::received_block_index;
 
@@ -452,7 +452,7 @@ impl TxoModel for Txo {
     fn update_to_pending(
         &self,
         pending_tombstone_block_index: i64,
-        conn: &PooledConnection<ConnectionManager<SqliteConnection>>,
+        conn: &PooledConnection<ConnectionManager<PgConnection>>,
     ) -> Result<(), WalletDbError> {
         use crate::db::schema::txos;
 
@@ -465,7 +465,7 @@ impl TxoModel for Txo {
     fn update_to_spent(
         txo_id_hex: &str,
         spent_block_index: i64,
-        conn: &PooledConnection<ConnectionManager<SqliteConnection>>,
+        conn: &PooledConnection<ConnectionManager<PgConnection>>,
     ) -> Result<(), WalletDbError> {
         use crate::db::schema::txos;
 
@@ -480,7 +480,7 @@ impl TxoModel for Txo {
 
     fn update_txos_exceeding_pending_tombstone_block_index_to_unspent(
         block_index: i64,
-        conn: &PooledConnection<ConnectionManager<SqliteConnection>>,
+        conn: &PooledConnection<ConnectionManager<PgConnection>>,
     ) -> Result<(), WalletDbError> {
         use crate::db::schema::txos;
 
@@ -499,7 +499,7 @@ impl TxoModel for Txo {
         account_id_hex: &str,
         offset: Option<i64>,
         limit: Option<i64>,
-        conn: &PooledConnection<ConnectionManager<SqliteConnection>>,
+        conn: &PooledConnection<ConnectionManager<PgConnection>>,
     ) -> Result<Vec<Txo>, WalletDbError> {
         use crate::db::schema::txos;
 
@@ -518,7 +518,7 @@ impl TxoModel for Txo {
 
     fn list_for_address(
         assigned_subaddress_b58: &str,
-        conn: &PooledConnection<ConnectionManager<SqliteConnection>>,
+        conn: &PooledConnection<ConnectionManager<PgConnection>>,
     ) -> Result<Vec<Txo>, WalletDbError> {
         use crate::db::schema::txos;
         let subaddress = AssignedSubaddress::get(assigned_subaddress_b58, conn)?;
@@ -532,7 +532,7 @@ impl TxoModel for Txo {
     fn list_unspent(
         account_id_hex: &str,
         assigned_subaddress_b58: Option<&str>,
-        conn: &PooledConnection<ConnectionManager<SqliteConnection>>,
+        conn: &PooledConnection<ConnectionManager<PgConnection>>,
     ) -> Result<Vec<Txo>, WalletDbError> {
         use crate::db::schema::txos;
 
@@ -556,7 +556,7 @@ impl TxoModel for Txo {
 
     fn list_unspent_or_pending_key_images(
         account_id_hex: &str,
-        conn: &PooledConnection<ConnectionManager<SqliteConnection>>,
+        conn: &PooledConnection<ConnectionManager<PgConnection>>,
     ) -> Result<HashMap<KeyImage, String>, WalletDbError> {
         use crate::db::schema::txos;
 
@@ -583,7 +583,7 @@ impl TxoModel for Txo {
     fn list_spent(
         account_id_hex: &str,
         assigned_subaddress_b58: Option<&str>,
-        conn: &PooledConnection<ConnectionManager<SqliteConnection>>,
+        conn: &PooledConnection<ConnectionManager<PgConnection>>,
     ) -> Result<Vec<Txo>, WalletDbError> {
         use crate::db::schema::txos;
 
@@ -605,7 +605,7 @@ impl TxoModel for Txo {
 
     fn list_secreted(
         account_id_hex: &str,
-        conn: &PooledConnection<ConnectionManager<SqliteConnection>>,
+        conn: &PooledConnection<ConnectionManager<PgConnection>>,
     ) -> Result<Vec<Txo>, WalletDbError> {
         use crate::db::schema::txos;
 
@@ -625,7 +625,7 @@ impl TxoModel for Txo {
 
     fn list_orphaned(
         account_id_hex: &str,
-        conn: &PooledConnection<ConnectionManager<SqliteConnection>>,
+        conn: &PooledConnection<ConnectionManager<PgConnection>>,
     ) -> Result<Vec<Txo>, WalletDbError> {
         use crate::db::schema::txos;
 
@@ -640,7 +640,7 @@ impl TxoModel for Txo {
     fn list_pending(
         account_id_hex: &str,
         assigned_subaddress_b58: Option<&str>,
-        conn: &PooledConnection<ConnectionManager<SqliteConnection>>,
+        conn: &PooledConnection<ConnectionManager<PgConnection>>,
     ) -> Result<Vec<Txo>, WalletDbError> {
         use crate::db::schema::txos;
 
@@ -665,7 +665,7 @@ impl TxoModel for Txo {
     fn list_pending_exceeding_block_index(
         account_id_hex: &str,
         block_index: i64,
-        conn: &PooledConnection<ConnectionManager<SqliteConnection>>,
+        conn: &PooledConnection<ConnectionManager<PgConnection>>,
     ) -> Result<Vec<Txo>, WalletDbError> {
         use crate::db::schema::txos;
 
@@ -682,7 +682,7 @@ impl TxoModel for Txo {
 
     fn list_minted(
         account_id_hex: &str,
-        conn: &PooledConnection<ConnectionManager<SqliteConnection>>,
+        conn: &PooledConnection<ConnectionManager<PgConnection>>,
     ) -> Result<Vec<Txo>, WalletDbError> {
         use crate::db::schema::txos;
 
@@ -695,7 +695,7 @@ impl TxoModel for Txo {
 
     fn get(
         txo_id_hex: &str,
-        conn: &PooledConnection<ConnectionManager<SqliteConnection>>,
+        conn: &PooledConnection<ConnectionManager<PgConnection>>,
     ) -> Result<Txo, WalletDbError> {
         use crate::db::schema::txos;
 
@@ -717,7 +717,7 @@ impl TxoModel for Txo {
 
     fn select_by_public_key(
         public_keys: &[&CompressedRistrettoPublic],
-        conn: &PooledConnection<ConnectionManager<SqliteConnection>>,
+        conn: &PooledConnection<ConnectionManager<PgConnection>>,
     ) -> Result<Vec<Txo>, WalletDbError> {
         use crate::db::schema::txos;
 
@@ -733,7 +733,7 @@ impl TxoModel for Txo {
 
     fn select_by_id(
         txo_ids: &[String],
-        conn: &PooledConnection<ConnectionManager<SqliteConnection>>,
+        conn: &PooledConnection<ConnectionManager<PgConnection>>,
     ) -> Result<Vec<Txo>, WalletDbError> {
         use crate::db::schema::txos;
 
@@ -747,7 +747,7 @@ impl TxoModel for Txo {
         account_id_hex: &str,
         target_value: u64,
         max_spendable_value: Option<i64>,
-        conn: &PooledConnection<ConnectionManager<SqliteConnection>>,
+        conn: &PooledConnection<ConnectionManager<PgConnection>>,
     ) -> Result<Vec<Txo>, WalletDbError> {
         use crate::db::schema::txos;
         let mut spendable_txos: Vec<Txo> = txos::table
@@ -837,7 +837,7 @@ impl TxoModel for Txo {
         account_id: &AccountID,
         txo_id_hex: &str,
         confirmation: &TxOutConfirmationNumber,
-        conn: &PooledConnection<ConnectionManager<SqliteConnection>>,
+        conn: &PooledConnection<ConnectionManager<PgConnection>>,
     ) -> Result<bool, WalletDbError> {
         let txo = Txo::get(txo_id_hex, conn)?;
         let public_key: RistrettoPublic = mc_util_serial::decode(&txo.public_key)?;
@@ -848,7 +848,7 @@ impl TxoModel for Txo {
 
     fn scrub_account(
         account_id_hex: &str,
-        conn: &PooledConnection<ConnectionManager<SqliteConnection>>,
+        conn: &PooledConnection<ConnectionManager<PgConnection>>,
     ) -> Result<(), WalletDbError> {
         use crate::db::schema::txos;
 
@@ -870,7 +870,7 @@ impl TxoModel for Txo {
     }
 
     fn delete_unreferenced(
-        conn: &PooledConnection<ConnectionManager<SqliteConnection>>,
+        conn: &PooledConnection<ConnectionManager<PgConnection>>,
     ) -> Result<(), WalletDbError> {
         use crate::db::schema::txos;
 

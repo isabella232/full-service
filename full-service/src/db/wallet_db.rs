@@ -15,44 +15,46 @@ pub struct ConnectionOptions {
     pub busy_timeout: Option<Duration>,
 }
 
-impl diesel::r2d2::CustomizeConnection<SqliteConnection, diesel::r2d2::Error>
-    for ConnectionOptions
-{
-    fn on_acquire(&self, conn: &mut SqliteConnection) -> Result<(), diesel::r2d2::Error> {
-        (|| {
-            WalletDb::set_db_encryption_key_from_env(conn);
+impl diesel::r2d2::CustomizeConnection<PgConnection, diesel::r2d2::Error> for ConnectionOptions {
+    fn on_acquire(&self, conn: &mut PgConnection) -> Result<(), diesel::r2d2::Error> {
+        Ok(())
+        // (|| {
+        //     WalletDb::set_db_encryption_key_from_env(conn);
 
-            if self.enable_wal {
-                conn.batch_execute("
-                    PRAGMA journal_mode = WAL;          -- better write-concurrency
-                    PRAGMA synchronous = NORMAL;        -- fsync only in critical moments
-                    PRAGMA wal_autocheckpoint = 1000;   -- write WAL changes back every 1000 pages, for an in average 1MB WAL file. May affect readers if number is increased
-                    PRAGMA wal_checkpoint(TRUNCATE);    -- free some space by truncating possibly massive WAL files from the last run.
-                ")?;
-            }
-            if self.enable_foreign_keys {
-                conn.batch_execute("PRAGMA foreign_keys = ON;")?;
-            } else {
-                conn.batch_execute("PRAGMA foreign_keys = OFF;")?;
-            }
-            if let Some(d) = self.busy_timeout {
-                conn.batch_execute(&format!("PRAGMA busy_timeout = {};", d.as_millis()))?;
-            }
+        //     if self.enable_wal {
+        //         conn.batch_execute("
+        //             PRAGMA journal_mode = WAL;          -- better
+        // write-concurrency             PRAGMA synchronous = NORMAL;
+        // -- fsync only in critical moments             PRAGMA
+        // wal_autocheckpoint = 1000;   -- write WAL changes back every 1000
+        // pages, for an in average 1MB WAL file. May affect readers if number
+        // is increased             PRAGMA wal_checkpoint(TRUNCATE);
+        // -- free some space by truncating possibly massive WAL files from the
+        // last run.         ")?;
+        //     }
+        //     if self.enable_foreign_keys {
+        //         conn.batch_execute("PRAGMA foreign_keys = ON;")?;
+        //     } else {
+        //         conn.batch_execute("PRAGMA foreign_keys = OFF;")?;
+        //     }
+        //     if let Some(d) = self.busy_timeout {
+        //         conn.batch_execute(&format!("PRAGMA busy_timeout = {};",
+        // d.as_millis()))?;     }
 
-            Ok(())
-        })()
-        .map_err(diesel::r2d2::Error::QueryError)
+        //     Ok(())
+        // })()
+        // .map_err(diesel::r2d2::Error::QueryError)
     }
 }
 
 #[derive(Clone)]
 pub struct WalletDb {
-    pool: Pool<ConnectionManager<SqliteConnection>>,
+    pool: Pool<ConnectionManager<PgConnection>>,
     logger: Logger,
 }
 
 impl WalletDb {
-    pub fn new(pool: Pool<ConnectionManager<SqliteConnection>>, logger: Logger) -> Self {
+    pub fn new(pool: Pool<ConnectionManager<PgConnection>>, logger: Logger) -> Self {
         Self { pool, logger }
     }
 
@@ -61,7 +63,7 @@ impl WalletDb {
         db_connections: u32,
         logger: Logger,
     ) -> Result<Self, WalletDbError> {
-        let manager = ConnectionManager::<SqliteConnection>::new(database_url);
+        let manager = ConnectionManager::<PgConnection>::new(database_url);
         let pool = Pool::builder()
             .max_size(db_connections)
             .connection_customizer(Box::new(ConnectionOptions {
@@ -76,11 +78,11 @@ impl WalletDb {
 
     pub fn get_conn(
         &self,
-    ) -> Result<PooledConnection<ConnectionManager<SqliteConnection>>, WalletDbError> {
+    ) -> Result<PooledConnection<ConnectionManager<PgConnection>>, WalletDbError> {
         Ok(self.pool.get()?)
     }
 
-    pub fn set_db_encryption_key_from_env(conn: &SqliteConnection) {
+    pub fn set_db_encryption_key_from_env(conn: &PgConnection) {
         // Send the encryption key to SQLCipher, if it is not the empty string.
         let encryption_key = env::var("MC_PASSWORD").unwrap_or_else(|_| "".to_string());
         if !encryption_key.is_empty() {
@@ -94,7 +96,7 @@ impl WalletDb {
         }
     }
 
-    pub fn try_change_db_encryption_key_from_env(conn: &SqliteConnection) {
+    pub fn try_change_db_encryption_key_from_env(conn: &PgConnection) {
         // Change the encryption key if specified by the environment variable.
         let encryption_key = env::var("MC_PASSWORD").unwrap_or_else(|_| "".to_string());
         let changed_encryption_key =
@@ -117,12 +119,12 @@ impl WalletDb {
         }
     }
 
-    pub fn check_database_connectivity(conn: &SqliteConnection) -> bool {
+    pub fn check_database_connectivity(conn: &PgConnection) -> bool {
         conn.batch_execute("SELECT count(*) FROM sqlite_master;")
             .is_ok()
     }
 
-    pub fn validate_foreign_keys(conn: &SqliteConnection) {
+    pub fn validate_foreign_keys(conn: &PgConnection) {
         let invalid_foreign_keys = diesel::dsl::sql::<(
             sql_types::Text,
             sql_types::Int8,

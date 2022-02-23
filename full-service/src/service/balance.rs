@@ -276,7 +276,7 @@ where
 {
     fn get_balance_inner(
         account_id_hex: &str,
-        conn: &PooledConnection<ConnectionManager<SqliteConnection>>,
+        conn: &PooledConnection<ConnectionManager<PgConnection>>,
     ) -> Result<(u128, u128, u128, u128, u128), BalanceServiceError> {
         // Note: We need to cast to u64 first, because i64 could have wrapped, then to
         // u128

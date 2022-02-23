@@ -158,7 +158,7 @@ pub fn sync_account(
 
 fn sync_account_next_chunk(
     ledger_db: &LedgerDB,
-    conn: &PooledConnection<ConnectionManager<SqliteConnection>>,
+    conn: &PooledConnection<ConnectionManager<PgConnection>>,
     logger: &Logger,
     account_id_hex: &str,
 ) -> Result<SyncStatus, SyncError> {

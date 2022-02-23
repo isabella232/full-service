@@ -14,7 +14,7 @@ use crate::{
 };
 use diesel::{
     r2d2::{ConnectionManager as CM, PooledConnection},
-    Connection as DSLConnection, SqliteConnection,
+    sql_query, Connection as DSLConnection, PgConnection, RunQueryDsl,
 };
 use diesel_migrations::embed_migrations;
 use mc_account_keys::{AccountKey, PublicAddress, RootIdentity};
@@ -60,6 +60,16 @@ pub struct WalletDbTestContext {
     pub db_name: String,
 }
 
+impl Drop for WalletDbTestContext {
+    fn drop(&mut self) {
+        let conn = PgConnection::establish(&format!("{}/postgres", self.base_url))
+            .unwrap_or_else(|err| panic!("Cannot connect to {} database: {:?}", self.db_name, err));
+        sql_query(format!("DROP DATABASE {};", self.db_name))
+            .execute(&conn)
+            .unwrap_or_else(|err| panic!("Cannot drop {} database: {:?}", self.db_name, err));
+    }
+}
+
 impl Default for WalletDbTestContext {
     fn default() -> Self {
         let db_name: String = format!(
@@ -71,15 +81,17 @@ impl Default for WalletDbTestContext {
                 .collect::<String>()
                 .to_lowercase()
         );
-        let base_url = String::from("/tmp");
+        let base_url = String::from("postgres://briancorbin:password@localhost");
 
         // Connect to the database and run the migrations
         // Note: This should be kept in sync wth how the migrations are run in main.rs
         // so as to have faithful tests.
-        // Clear environment variables for db encryption.
-        env::set_var("MC_PASSWORD", "".to_string());
-        env::set_var("MC_CHANGE_PASSWORD", "".to_string());
-        let conn = SqliteConnection::establish(&format!("{}/{}", base_url, db_name))
+        let conn = PgConnection::establish(&format!("{}/postgres", base_url))
+            .unwrap_or_else(|err| panic!("Cannot connect to {} database: {:?}", db_name, err));
+        sql_query(format!("CREATE DATABASE {};", db_name))
+            .execute(&conn)
+            .unwrap_or_else(|err| panic!("Cannot create {} database: {:?}", db_name, err));
+        let conn = PgConnection::establish(&format!("{}/{}", base_url, db_name))
             .unwrap_or_else(|err| panic!("Cannot connect to {} database: {:?}", db_name, err));
         embedded_migrations::run(&conn).expect("failed running migrations");
 
@@ -231,7 +243,7 @@ pub fn add_block_with_tx(ledger_db: &mut LedgerDB, tx: Tx) -> u64 {
 
 pub fn add_block_from_transaction_log(
     ledger_db: &mut LedgerDB,
-    conn: &PooledConnection<CM<SqliteConnection>>,
+    conn: &PooledConnection<CM<PgConnection>>,
     transaction_log: &TransactionLog,
 ) -> u64 {
     let associated_txos = transaction_log.get_associated_txos(conn).unwrap();
