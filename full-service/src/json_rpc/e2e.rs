@@ -3618,7 +3618,8 @@ mod e2e {
         let (client, _ledger_db, _db_ctx, _network_state) = setup(&mut rng, logger.clone());
 
         let name = "Coins for cats";
-        let view_key = "privateviewkey";
+        let view_key = "11111111111111111111111111111111";
+
         // Import Account
         let body = json!({
             "jsonrpc": "2.0",
@@ -3630,6 +3631,7 @@ mod e2e {
             },
         });
         let res = dispatch(&client, body, &logger);
+        println!("ERROR {:?}", res.get("jsonrpc"));
         assert_eq!(res.get("jsonrpc").unwrap(), "2.0");
 
         let result = res.get("result").unwrap();
@@ -3646,7 +3648,7 @@ mod e2e {
         let (client, _ledger_db, _db_ctx, _network_state) = setup(&mut rng, logger.clone());
 
         let name = "Coins for cats";
-        let view_key = "privateviewkey";
+        let view_key = "11111111111111111111111111111111";
         // Import Account
         let body = json!({
             "jsonrpc": "2.0",
